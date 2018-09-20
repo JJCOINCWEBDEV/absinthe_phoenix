@@ -17,14 +17,15 @@ defmodule Absinthe.Phoenix.Channel do
   def join("__absinthe__:control", _, socket) do
     schema = socket.assigns[:__absinthe_schema__]
     pipeline = socket.assigns[:__absinthe_pipeline__]
+    pubsub = socket.assigns[:__absinthe_pubsub__] || socket.endpoint
 
     absinthe_config = Map.get(socket.assigns, :absinthe, %{})
 
     opts =
       absinthe_config
       |> Map.get(:opts, [])
-      |> Keyword.update(:context, %{pubsub: socket.endpoint}, fn context ->
-        Map.put_new(context, :pubsub, socket.endpoint)
+      |> Keyword.update(:context, %{pubsub: pubsub}, fn context ->
+        Map.put_new(context, :pubsub, pubsub)
       end)
 
     absinthe_config =
@@ -94,7 +95,7 @@ defmodule Absinthe.Phoenix.Channel do
       |> Map.get(:absinthe, %{})
       |> Map.get(:opts, [])
       |> Keyword.get(:context, %{})
-      |> Map.get(:pubsub, socket.endpoint)
+      |> Map.get(:pubsub, socket.assigns[:__absinthe_pubsub__] || socket.endpoint)
 
     Phoenix.PubSub.unsubscribe(socket.pubsub_server, doc_id)
     Absinthe.Subscription.unsubscribe(pubsub, doc_id)
